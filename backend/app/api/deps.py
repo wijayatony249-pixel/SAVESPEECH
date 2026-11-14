@@ -1,12 +1,6 @@
-"""API Dependencies: get_db, get_current_user, require_role."""
 from typing import Generator
+from sqlalchemy.orm import Session
+from app.db.session import get_db
 
-
-def get_db():
-    """Stub dependency get_db (diimplementasikan di Phase B2)."""
-    raise NotImplementedError("Diimplementasikan di Phase B2")
-
-
-def get_current_user():
-    """Stub dependency get_current_user (diimplementasikan di Phase B3)."""
-    raise NotImplementedError("Diimplementasikan di Phase B3")
+# Dependency get_db siap digunakan oleh endpoint
+__all__ = ["get_db"]
