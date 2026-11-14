@@ -1,62 +1,12 @@
 import uuid
 from datetime import timedelta
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
-
-from sqlalchemy.pool import StaticPool
-from app.main import app
-from app.db.base import Base
 from app.db.models import User, AuditLog
-from app.api.deps import get_db
 from app.core.security import create_access_token
 from app.core.limiter import limiter
 
-# Setup database SQLite in-memory dengan StaticPool agar sesi konsisten
-TEST_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
 
-
-@event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
-
-
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    """Membuat tabel baru untuk setiap test dan menghapusnya setelah test selesai."""
-    Base.metadata.create_all(bind=engine)
-    # Reset limiter storage antar-test
-    limiter.reset()
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-
-client = TestClient(app)
-
-
-def test_register_login_me_success():
+def test_register_login_me_success(client):
     """Menguji alur lengkap: register -> login -> get profile (/me) berhasil."""
     payload = {
         "nama": "Ahmad Dani",
@@ -94,7 +44,7 @@ def test_register_login_me_success():
     assert me_data["email"] == "ahmad.dani@example.com"
 
 
-def test_register_duplicate_email():
+def test_register_duplicate_email(client):
     """Menguji bahwa pendaftaran dengan email duplikat mengembalikan 409."""
     payload = {
         "nama": "User Satu",
@@ -111,7 +61,7 @@ def test_register_duplicate_email():
     assert "sudah terdaftar" in data["error"]["message"].lower()
 
 
-def test_register_weak_password():
+def test_register_weak_password(client):
     """Menguji bahwa kata sandi yang tidak memenuhi kebijakan ditolak (422)."""
     # Kurang dari 8 karakter
     res1 = client.post("/api/auth/register", json={"nama": "A", "email": "a@ex.com", "password": "Pass1"})
@@ -126,7 +76,7 @@ def test_register_weak_password():
     assert res3.status_code == 422
 
 
-def test_login_identical_error_message():
+def test_login_identical_error_message(client):
     """Menguji mitigasi user enumeration: pesan error identik untuk email salah vs password salah."""
     # Daftar 1 user valid
     client.post("/api/auth/register", json={"nama": "User A", "email": "valid@example.com", "password": "Password123"})
@@ -143,7 +93,7 @@ def test_login_identical_error_message():
     assert res_wrong_email.json()["error"]["message"] == "Email atau kata sandi salah"
 
 
-def test_expired_and_invalid_token():
+def test_expired_and_invalid_token(client):
     """Menguji penolakan token yang kedaluwarsa atau tidak valid."""
     # Token kedaluwarsa
     expired_token = create_access_token(subject=str(uuid.uuid4()), expires_delta=timedelta(seconds=-10))
@@ -161,20 +111,18 @@ def test_expired_and_invalid_token():
     assert res_none.status_code == 401
 
 
-def test_audit_log_redaction():
+def test_audit_log_redaction(client, db_session):
     """Menguji bahwa audit log tersimpan dengan ip_hash HMAC-SHA256 tanpa mencatat password."""
     client.post("/api/auth/register", json={"nama": "Audit User", "email": "audit@example.com", "password": "SecretPassword123"})
 
-    db = TestingSessionLocal()
-    logs = db.query(AuditLog).all()
+    logs = db_session.query(AuditLog).all()
     assert len(logs) > 0
     for log in logs:
         assert len(log.ip_hash) == 64  # SHA-256 menghasilkan 64 hex characters
         assert log.action in ["register", "login_success", "login_failed"]
-    db.close()
 
 
-def test_login_rate_limiting():
+def test_login_rate_limiting(client):
     """Menguji slowapi rate limiting: maksimal 5 login per menit per IP."""
     limiter.reset()
     # 5 request pertama diizinkan (meskipun 401 karena salah password)

@@ -1,41 +1,10 @@
 import uuid
 from datetime import datetime, timezone
 import pytest
-from sqlalchemy import create_engine, event, inspect
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 
 from app.db.base import Base
 from app.db.models import User, AnalysisResult, AnalysisIndicator, AuditLog, ModelVersion
-
-# Database test in-memory SQLite terpisah
-TEST_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(TEST_DATABASE_URL)
-
-
-# Aktifkan Foreign Key cascade pada SQLite
-@event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
-
-
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Fixture untuk membuat skema baru dan sesi database per test."""
-    Base.metadata.create_all(bind=engine)
-    session = TestingSessionLocal()
-    try:
-        yield session
-    finally:
-        session.rollback()
-        session.close()
-        Base.metadata.drop_all(bind=engine)
 
 
 def test_insert_valid_entities(db_session):
@@ -205,7 +174,7 @@ def test_cascade_delete(db_session):
     assert db_session.query(AnalysisIndicator).filter(AnalysisIndicator.id == ind_id).first() is None
 
 
-def test_no_audio_or_transcript_columns_in_db(db_session):
+def test_no_audio_or_transcript_columns_in_db():
     """Audit Keamanan Data: Memastikan tidak ada kolom transkrip, kutipan, atau audio pada database."""
     forbidden_terms = ["audio", "transcript", "transkrip", "quote", "kutipan"]
 
