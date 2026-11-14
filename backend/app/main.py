@@ -9,8 +9,10 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.core.limiter import limiter
 from app.api.routes import health, auth, analyze, jobs, results, history
 
 # Inisialisasi logging terstruktur
@@ -47,6 +49,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+# Hubungkan rate limiter slowapi ke state app
+app.state.limiter = limiter
 
 # 1. Pasang Security Headers Middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -103,6 +108,19 @@ async def generic_exception_handler(request: Request, exc: Exception):
             "error": {
                 "code": 500,
                 "message": "Terjadi kesalahan internal pada server. Silakan coba beberapa saat lagi.",
+            }
+        },
+    )
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={
+            "error": {
+                "code": 429,
+                "message": "Terlalu banyak permintaan. Silakan tunggu beberapa saat sebelum mencoba lagi.",
             }
         },
     )
