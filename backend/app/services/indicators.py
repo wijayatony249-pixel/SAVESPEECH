@@ -69,6 +69,7 @@ def detect_indicators(
                         detected_indicators.append({
                             "code": code,
                             "label": label,
+                            "name": label,
                             "weight": weight,
                             "quote": quote,
                             "segmentIndex": seg_idx,
