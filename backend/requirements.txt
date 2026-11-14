@@ -19,3 +19,5 @@ scikit-learn==1.7.2
 pandas==2.3.3
 joblib==1.6.0
 matplotlib==3.10.9
+bandit==1.9.4
+pip-audit==2.10.1
