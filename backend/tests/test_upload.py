@@ -1,9 +1,33 @@
 import io
 import time
 import pytest
+from unittest.mock import MagicMock
 from app.db.models import User
 from app.core.config import settings
 from app.core.security import create_access_token
+from app.services.stt import WhisperModelSingleton
+
+
+class MockSegment:
+    def __init__(self, start: float, end: float, text: str):
+        self.start = start
+        self.end = end
+        self.text = text
+
+
+class MockWhisperInfo:
+    def __init__(self, duration: float = 4.0):
+        self.duration = duration
+
+
+@pytest.fixture(autouse=True)
+def mock_whisper_for_upload():
+    mock_model = MagicMock()
+    mock_segments = [MockSegment(0.0, 3.0, "Halo selamat siang")]
+    mock_model.transcribe.return_value = (iter(mock_segments), MockWhisperInfo())
+    WhisperModelSingleton.set_instance(mock_model)
+    yield
+    WhisperModelSingleton.reset()
 
 
 def _create_test_user(db_session, nama: str, email: str) -> tuple[User, str]:

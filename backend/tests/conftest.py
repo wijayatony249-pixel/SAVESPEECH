@@ -9,6 +9,7 @@ from app.db.base import Base
 from app.api.deps import get_db
 from app.core.config import settings
 from app.services.job_manager import job_manager
+from app.services.stt import WhisperModelSingleton
 
 # Engine SQLite in-memory tunggal dengan StaticPool
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -47,6 +48,7 @@ def setup_test_db():
     """Setup dan teardown skema database serta folder temporer untuk setiap unit test."""
     Base.metadata.create_all(bind=test_engine)
     job_manager.clear()
+    WhisperModelSingleton.reset()
     # Bersihkan file temporer sebelum test
     for f in settings.temp_dir_path.iterdir():
         if f.is_file():
@@ -54,6 +56,8 @@ def setup_test_db():
     yield
     # Bersihkan database dan file temporer setelah test
     Base.metadata.drop_all(bind=test_engine)
+    job_manager.clear()
+    WhisperModelSingleton.reset()
     for f in settings.temp_dir_path.iterdir():
         if f.is_file():
             f.unlink(missing_ok=True)

@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     MAX_DURATION_SEC: int = 600
     TEMP_DIR: str = "temp_audio"
 
+    # Konfigurasi Speech-to-Text faster-whisper
+    WHISPER_MODEL: str = "small"
+    WHISPER_COMPUTE: str = "int8"
+    WHISPER_DEVICE: str = "cpu"
+
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
