@@ -30,6 +30,13 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
+# Pastikan SessionLocal di seluruh aplikasi terhubung ke database in-memory selama pengujian
+import app.db.session as _db_session_mod
+import app.services.pipeline as _pipeline_mod
+
+_db_session_mod.SessionLocal = TestingSessionLocal
+_pipeline_mod.SessionLocal = TestingSessionLocal
+
 
 def override_get_db():
     db = TestingSessionLocal()
