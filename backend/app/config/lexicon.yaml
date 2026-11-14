@@ -1,2 +1,106 @@
-# Konfigurasi Leksikon Indikator (diimplementasikan di Phase B8)
-indicators: []
+# Katalog 9 Indikator Deteksi Penipuan Impersonasi Finansial SAVESPEECH
+indicators:
+  - code: "REQ_OTP"
+    label: "Permintaan Kode OTP"
+    weight: 30
+    patterns:
+      - "(?:kode\\s*)?otp"
+      - "one[- ]time\\s*password"
+      - "kode\\s*(?:enam|6)\\s*digit"
+      - "kode\\s*verifikasi\\s*(?:sms|wa|whatsapp)?"
+      - "(?:sebutkan|bacakan|kirimkan|masukkan)\\s*kode"
+
+  - code: "REQ_CREDENTIAL"
+    label: "Permintaan PIN / Password / Data Kartu"
+    weight: 30
+    patterns:
+      - "pin\\s*(?:atm|akun)?"
+      - "password\\s*(?:m-?banking)?"
+      - "kata\\s*sandi"
+      - "(?:kode\\s*)?cvv"
+      - "(?:kode\\s*)?cvc"
+      - "nomor\\s*kartu\\s*(?:debit|kredit)?"
+      - "(?:tiga|3)\\s*angka\\s*(?:di\\s*belakang)?"
+
+  - code: "TRANSFER_INSTRUCTION"
+    label: "Instruksi Transfer Dana ('Rekening Aman')"
+    weight: 25
+    patterns:
+      - "rekening\\s*aman"
+      - "rekening\\s*penampungan"
+      - "rekening\\s*(?:khusus\\s*)?kepolisian"
+      - "transfer\\s*(?:saldo|dana|ke\\s*rekening)"
+      - "pindahkan\\s*(?:seluruh\\s*)?dana"
+      - "virtual\\s*account\\s*aman"
+      - "transfer\\s*pengembalian"
+
+  - code: "CLAIM_INSTITUTION"
+    label: "Mengaku Lembaga Finansial / Bank / E-Wallet / CS"
+    weight: 15
+    patterns:
+      - "(?:dari|pihak)\\s*bank"
+      - "(?:petugas\\s*)?keamanan\\s*sentral"
+      - "cs\\s*pusat"
+      - "customer\\s*(?:service|care)"
+      - "layanan\\s*nasabah"
+      - "(?:resmi\\s*)?dompet\\s*digital"
+      - "(?:pihak\\s*)?e-?wallet"
+      - "kepolisian\\s*cyber"
+
+  - code: "BLOCK_THREAT"
+    label: "Ancaman Pemblokiran Rekening"
+    weight: 15
+    patterns:
+      - "diblokir\\s*(?:total|permanen)?"
+      - "pemblokiran\\s*(?:rekening|sistem)?"
+      - "dibekukan\\s*(?:permanen)?"
+      - "penutupan\\s*rekening"
+      - "kartu\\s*disita"
+      - "saldo\\s*hangus"
+
+  - code: "APP_LINK_INSTRUCTION"
+    label: "Instruksi Aplikasi / Link / Remote Access"
+    weight: 15
+    patterns:
+      - "klik\\s*tautan"
+      - "klik\\s*link"
+      - "(?:unduh|download|install)\\s*(?:aplikasi|link|file)?"
+      - "(?:link\\s*)?apk"
+      - "anydesk"
+      - "teamviewer"
+      - "tautan\\s*pemulihan"
+
+  - code: "SUSPICIOUS_TX_INFO"
+    label: "Informasi Transaksi Mencurigakan"
+    weight: 10
+    patterns:
+      - "transaksi\\s*(?:ilegal|mencurigakan|liar)?"
+      - "penarikan\\s*(?:ilegal)?"
+      - "dibobol"
+      - "pencucian\\s*uang"
+      - "gesek\\s*tunai"
+      - "pinjaman\\s*online"
+      - "peretasan"
+
+  - code: "URGENCY"
+    label: "Unsur Ketergesaan (Mendesak)"
+    weight: 10
+    patterns:
+      - "sekarang\\s*juga"
+      - "segera"
+      - "(?:dalam|kurun)\\s*\\d+\\s*menit"
+      - "detik\\s*ini\\s*juga"
+      - "jangan\\s*ditutup\\s*teleponnya"
+      - "sangat\\s*mendesak"
+      - "sebelum\\s*sistem\\s*(?:menutup|terkunci)"
+
+  - code: "PSYCHOLOGICAL_MANIP"
+    label: "Manipulasi Psikologis / Intimidasi"
+    weight: 10
+    patterns:
+      - "sindikat\\s*narkoba"
+      - "tuntutan\\s*hukum"
+      - "proses\\s*pidana"
+      - "jangan\\s*panik"
+      - "satu-satunya\\s*cara"
+      - "tanggung\\s*jawab\\s*bapak"

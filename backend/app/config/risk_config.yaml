@@ -1,14 +1,17 @@
-override:
-  forced_min_level: High
-  require_institution_and_credential: true
-thresholds:
-  levels:
-    critical: 85
-    high: 60
-    low: 0
-    medium: 30
-  scam_probability: 0.57
 version: '1.0'
 weights:
-  indicators: 0.4
   ml_probability: 0.6
+  indicators: 0.4
+coefficients:
+  ml: 0.6
+  indicators: 0.4
+thresholds:
+  scam_probability: 0.57
+  levels:
+    low: 0
+    medium: 30
+    high: 60
+    critical: 85
+override:
+  require_institution_and_credential: true
+  forced_min_level: "High"
